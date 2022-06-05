@@ -1,9 +1,9 @@
 Libraries to install for this project.
 
-1.numpy
-2.face recognition
+1.Tkinter
+2.numpy
 3.cv2
-
+4.face_recognition
 
 
 (Libraries can be installed by going into cmd and using the 'pip install <library name>' function.)
