@@ -1,8 +1,20 @@
+from tkinter import filedialog
+from PIL import Image, ImageTk
 import numpy as np
 import face_recognition as fr
 import cv2
 
-video_capture = cv2.VideoCapture(0)
+
+
+def  upload_file():
+ global img
+ global filename
+ f_types = [('jpg Files', '*.jpg'),('png Files','*.png')]
+ filename = filedialog.askopenfilename(filetypes=f_types)
+ print(filename)
+ img = ImageTk.PhotoImage(file=filename)
+ b2 =tk.Button(root,image=img) # using Button
+ b2.pack()
 
 tanush_image = fr.load_image_file("C:/Users/infin/faces/bill-gates.jpg")
 tanush_face_encoding = fr.face_encodings(tanush_image)[0]
@@ -10,37 +22,81 @@ tanush_face_encoding = fr.face_encodings(tanush_image)[0]
 known_face_encondings = [tanush_face_encoding]
 known_face_names = ["Bill Gates"]
 
-while True: 
-    ret, frame = video_capture.read()
+def  upload_picture():
+        frame=cv2.imread(filename)
+        frame=cv2.resize(frame,(800,800))
+        rgb_frame = frame[:, :, ::-1]
+        face_locations = fr.face_locations(rgb_frame)
+        face_encodings = fr.face_encodings(rgb_frame, face_locations)
+        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+            matches = fr.compare_faces(known_face_encondings, face_encoding)
+            name = "Unkown Entity"
+            face_distances = fr.face_distance(known_face_encondings, face_encoding)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = known_face_names[best_match_index]
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.rectangle(frame, (left, bottom -35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+        cv2.imshow('Webcam_facerecognition', frame)
 
-    rgb_frame = frame[:, :, ::-1]
 
-    face_locations = fr.face_locations(rgb_frame)
-    face_encodings = fr.face_encodings(rgb_frame, face_locations)
+def  live_camera():
+    video_capture = cv2.VideoCapture(0)
+    while video_capture.isOpened():
+        ret, frame = video_capture.read()
 
-    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        rgb_frame = frame[:, :, ::-1]
 
-        matches = fr.compare_faces(known_face_encondings, face_encoding)
+        face_locations = fr.face_locations(rgb_frame)
+        face_encodings = fr.face_encodings(rgb_frame, face_locations)
 
-        name = "Unkown Entity"
+        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
 
-        face_distances = fr.face_distance(known_face_encondings, face_encoding)
+            matches = fr.compare_faces(known_face_encondings, face_encoding)
 
-        best_match_index = np.argmin(face_distances)
-        if matches[best_match_index]:
-            name = known_face_names[best_match_index]
-        
-        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            name = "Unkown Entity"
 
-        cv2.rectangle(frame, (left, bottom -35), (right, bottom), (0, 0, 255), cv2.FILLED)
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            face_distances = fr.face_distance(known_face_encondings, face_encoding)
 
-    cv2.imshow('Webcam_facerecognition', frame)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = known_face_names[best_match_index]
+            
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+            cv2.rectangle(frame, (left, bottom -35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
-video_capture.release()
-cv2.destroyAllWindows()
+        cv2.imshow('Webcam_facerecognition', frame)
 
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
+
+# tkinter GUI
+import tkinter as tk
+root= tk.Tk()
+
+#Make a Canvas (i.e, a screen for your project
+canvas1 = tk.Canvas(root, width = 500, height = 500)
+canvas1.pack()
+
+canvas1.config(bg='blue')
+
+# Popularity label and input box
+label1 = tk.Label(root, text='Face Recognition System')
+canvas1.create_window(250, 50, window=label1)
+
+#Add button in GUI
+button1 = tk.Button (root, text='Upload',command=upload_file, bg='orange') # button to call the 'values' command above
+canvas1.create_window(250, 150, window=button1)
+button1 = tk.Button (root, text='Submit',command=upload_picture, bg='orange') # button to call the 'values' command above
+canvas1.create_window(250, 200, window=button1)
+#Add button in GUI
+button3 = tk.Button (root, text='Live',command=live_camera, bg='orange') # button to call the 'values' command above
+canvas1.create_window(250, 250, window=button3)
+root.mainloop()
